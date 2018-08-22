@@ -1,0 +1,6 @@
+---
+- name: reload systemd
+  command: /bin/systemctl daemon-reload
+
+- name: restart gluster
+  service: name=glusterfs-server state=restarted

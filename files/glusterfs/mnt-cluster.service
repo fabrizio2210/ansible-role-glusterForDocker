@@ -1,0 +1,23 @@
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+[Unit]
+Description=Cartella di cluster glusterfs
+Documentation=man:glusterfs
+Conflicts=umount.target
+Requires=glusterd.service
+After=glusterd.service
+Wants=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/mount-mnt_cluster.sh
+ExecStop=/bin/umount /mnt/cluster
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
