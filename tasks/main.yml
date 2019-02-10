@@ -1,8 +1,10 @@
 ---
 - name: installa pacchetti
-  apt: name={{item}} state=present update_cache=yes cache_valid_time=86400
-  with_items:
-    - glusterfs-server
+  apt: 
+    name: glusterfs-server
+    state: present 
+    update_cache: yes 
+    cache_valid_time: 86400
 
 - name: Verifica init script per glusterfs
   stat: path=/etc/init.d/glusterfs-server
@@ -61,7 +63,9 @@
     name: main-cluster
     bricks: /mnt/disk-usb1/vol
     replicas: "{{play_hosts|length}}"
-    cluster: "{{play_hosts}}"
+    cluster: "{{ item }}"
+  run_once: true
+  with_items: "{{ play_hosts }}"
 
 - name: monta il mount condiviso
   systemd:
