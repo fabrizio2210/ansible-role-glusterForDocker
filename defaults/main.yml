@@ -1,2 +1,3 @@
 ---
 # defaults file for glusterForDocker
+glusterForDocker_disk: '/dev/sda1'

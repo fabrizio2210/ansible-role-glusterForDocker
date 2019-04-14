@@ -47,7 +47,7 @@
   mount:
     path: /mnt/disk-usb1
     fstype: ext4
-    src: /dev/sda1
+    src: "{{ glusterForDocker_disk }}"
     state: mounted
 
 - name: Creazione del mountpoint
