@@ -1,7 +1,7 @@
 ---
 - name: installa pacchetti
   apt: 
-    name: glusterfs-server
+    name: "{{ glusterForDocker_packages }}"
     state: present 
     update_cache: yes 
     cache_valid_time: 86400
@@ -43,11 +43,22 @@
 - name: Servizio Gluster attivo
   service: name=glusterd state=started enabled=yes
 
+- name: Crea partizione
+  parted:
+    device: "{{ glusterForDocker_disk }}"
+    number: 1
+    state: present
+
+- name: Create a ext4 filesystem on /dev/sda1
+  filesystem:
+    fstype: ext4
+    dev: "{{ glusterForDocker_disk }}1"
+
 - name: Mount USB per brick gluster
   mount:
     path: /mnt/disk-usb1
     fstype: ext4
-    src: "{{ glusterForDocker_disk }}"
+    src: "{{ glusterForDocker_disk }}1"
     state: mounted
 
 - name: Creazione del mountpoint
@@ -57,15 +68,24 @@
 #setfattr -x trusted.gfid $brick_path
 #rm -rf $brick_path/.glusterfs
 #TODO se viene fatto il probe contemporaneamente fallisce.
+#- name: create gluster volume
+#  gluster_volume:
+#    state: present
+#    name: main-cluster
+#    bricks: /mnt/disk-usb1/vol
+#    replicas: "{{play_hosts|length}}"
+#    cluster: "{{ item }}"
+#  run_once: true
+#  with_items: "{{ play_hosts }}"
+
 - name: create gluster volume
   gluster_volume:
     state: present
     name: main-cluster
     bricks: /mnt/disk-usb1/vol
     replicas: "{{play_hosts|length}}"
-    cluster: "{{ item }}"
+    cluster: "{{ play_hosts }}"
   run_once: true
-  with_items: "{{ play_hosts }}"
 
 - name: monta il mount condiviso
   systemd:
