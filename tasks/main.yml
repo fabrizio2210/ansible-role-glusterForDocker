@@ -78,11 +78,49 @@
 #  run_once: true
 #  with_items: "{{ play_hosts }}"
 
+- set_fact:
+    uuids: []
+
+- name: get uuids for existing cluster nodes
+  shell: awk -F = '/UUID/ { print $NF }' /var/lib/glusterd/glusterd.info
+  register: out_uuids
+  changed_when: false
+
+- set_fact:
+    uuid: "{{ out_uuids.stdout }}"
+
+- name: get list of peers
+  shell: "gluster peer status | grep Uuid | awk '{ print $NF }'"
+  register: list_peers
+  changed_when: false
+
+- debug:
+    var: hostvars[item].uuid
+  run_once: true
+  with_items: "{{ play_hosts }}"
+
+- set_fact:
+    uuids: "{{ uuids + [hostvars[item].uuid] }}"
+  run_once: true
+  with_items: "{{ play_hosts }}"
+
+- set_fact:
+    difference_uuid: "{{ list_peers.stdout_lines | difference(uuids) }}"
+
+- name: Remove spurious node
+  shell: "gluster peer detach $(gluster peer status | grep {{ item }} -B1 | grep Hostname | awk '{ print $NF }') force"
+  with_items: "{{ difference_uuid }}"
+  when: 
+   - difference_uuid|length > 0
+   - uuid == (uuids|difference(difference_uuid))[0]
+
 - name: Create a trusted storage pool
   gluster_peer:
     state: present
     nodes: "{{ play_hosts }}"
   run_once: true
+  delegate_to: "{{ item }}"
+  with_items: "{{ play_hosts }}"
 
 - name: create gluster volume
   gluster_volume:
@@ -92,6 +130,8 @@
     replicas: "{{play_hosts|length}}"
     cluster: "{{ play_hosts }}"
   run_once: true
+  delegate_to: "{{ item }}"
+  with_items: "{{ play_hosts }}"
 
 - name: monta il mount condiviso
   systemd:
