@@ -82,7 +82,7 @@
     uuids: []
 
 - name: get uuids for existing cluster nodes
-  shell: awk -F = '/UUID/ { print $NF }' /var/lib/glusterd/glusterd.info
+  shell: awk -F = '/UUID/ { print $NF }' /var/lib/glusterd/glusterd.info || true
   register: out_uuids
   changed_when: false
 
