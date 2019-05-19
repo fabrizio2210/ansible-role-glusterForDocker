@@ -1,6 +1,7 @@
 ---
 # defaults file for glusterForDocker
 glusterForDocker_disk: '/dev/sda'
+glusterForDocker_partn: '1'
 glusterForDocker_packages:
   - glusterfs-server
   - parted

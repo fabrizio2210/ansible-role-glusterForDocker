@@ -43,22 +43,38 @@
 - name: Servizio Gluster attivo
   service: name=glusterd state=started enabled=yes
 
-- name: Crea partizione
+ # Example on how to read info and reuse it in subsequent task
+- name: Read device information 
+  parted: 
+    device: "{{ glusterForDocker_disk }}"
+    unit: s
+  register: device_info
+ 
+- name: "Crea partizione {{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
   parted:
     device: "{{ glusterForDocker_disk }}"
-    number: 1
+    number: "{{ glusterForDocker_partn }}"
     state: present
+  when: glusterForDocker_partn == "1"
 
-- name: Create a ext4 filesystem on /dev/sda1
+- name: "Crea partizione {{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
+  parted:
+    device: "{{ glusterForDocker_disk }}"
+    number: "{{ glusterForDocker_partn }}"
+    part_start: "{{ device_info.partitions[glusterForDocker_partn-2].end + 259 }}s"
+    state: present
+  when: glusterForDocker_partn != "1"
+
+- name: "Create a ext4 filesystem on {{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
   filesystem:
     fstype: ext4
-    dev: "{{ glusterForDocker_disk }}1"
+    dev: "{{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
 
 - name: Mount USB per brick gluster
   mount:
     path: /mnt/disk-usb1
     fstype: ext4
-    src: "{{ glusterForDocker_disk }}1"
+    src: "{{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
     state: mounted
 
 - name: Creazione del mountpoint
@@ -106,13 +122,19 @@
 
 - set_fact:
     difference_uuid: "{{ list_peers.stdout_lines | difference(uuids) }}"
+#TODO
+# remove even the brick "gluster volume remove-brick main-cluster replica 2  raspberrypi0:/mnt/disk-usb1/vol force"
 
 - name: Remove spurious node
   shell: "gluster peer detach $(gluster peer status | grep {{ item }} -B1 | grep Hostname | awk '{ print $NF }') force"
   with_items: "{{ difference_uuid }}"
+  failed_when: false
   when: 
    - difference_uuid|length > 0
-   - uuid == (uuids|difference(difference_uuid))[0]
+
+- name: wait some seconds to propagate
+  pause:
+    seconds: 5
 
 - name: Create a trusted storage pool
   gluster_peer:
