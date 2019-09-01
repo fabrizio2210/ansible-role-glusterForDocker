@@ -165,4 +165,4 @@
     state: directory
     path: "{{ glusterForDocker_async_folder }}"
     mode: 0755
-  when: glusterForDocker_setup_for_async
+  when: glusterForDocker_setup_for_async|bool
