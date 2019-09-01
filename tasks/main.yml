@@ -159,3 +159,10 @@
   systemd:
     name: mnt-cluster.service
     state: started
+
+- name: create async directory
+  file:
+    state: directory
+    path: "{{ glusterForDocker_async_folder }}"
+    mode: 0755
+  when: glusterForDocker_setup_for_async
