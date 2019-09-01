@@ -5,5 +5,5 @@ glusterForDocker_partn: '1'
 glusterForDocker_packages:
   - glusterfs-server
   - parted
-glusterForDocker_setup_for_async: True
+glusterForDocker_setup_for_async: true
 glusterForDocker_async_folder: /mnt/async/
