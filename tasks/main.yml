@@ -55,7 +55,9 @@
     device: "{{ glusterForDocker_disk }}"
     number: "{{ glusterForDocker_partn }}"
     state: present
-  when: glusterForDocker_partn == "1"
+  when: 
+    - glusterForDocker_partn == "1"
+    - glusterForDocker_createPartition|bool
 
 - name: "Crea partizione {{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
   parted:
@@ -63,7 +65,9 @@
     number: "{{ glusterForDocker_partn }}"
     part_start: "{{ device_info.partitions[glusterForDocker_partn-2].end + 259 }}s"
     state: present
-  when: glusterForDocker_partn != "1"
+  when: 
+    - glusterForDocker_partn != "1"
+    - glusterForDocker_createPartition|bool
 
 - name: "Create a ext4 filesystem on {{ glusterForDocker_disk }}{{ glusterForDocker_partn }}"
   filesystem:
