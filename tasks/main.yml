@@ -128,6 +128,8 @@
     difference_uuid: "{{ list_peers.stdout_lines | difference(uuids) }}"
 #TODO
 # remove even the brick "gluster volume remove-brick main-cluster replica 2  raspberrypi0:/mnt/disk-usb1/vol force"
+# make "peer probe" from the node inside the pool (not the new one)
+# name of the peer consistent (all  wFQDN or all in short hostname)
 
 - name: Remove spurious node
   shell: "gluster peer detach $(gluster peer status | grep {{ item }} -B1 | grep Hostname | awk '{ print $NF }') force"
